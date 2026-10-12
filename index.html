@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GibtuPaint Studio - Profesyonel Grafik Editörü</title>
+    <style>
+        :root {
+            --bg-dark: #121316;
+            --bg-panel: #1e1f25;
+            --bg-panel-light: #2a2c35;
+            --border-color: #343744;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --header-height: 38px;
+            --toolbar-height: 42px;
+            --statusbar-height: 26px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 12px;
+        }
+
+        /* --- MENÜ BARI --- */
+        .menu-bar {
+            height: var(--header-height);
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .menu-items {
+            display: flex;
+            gap: 4px;
+        }
+
+        .menu-item {
+            position: relative;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .menu-item:hover {
+            background-color: var(--bg-panel-light);
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            min-width: 180px;
+            padding: 5px 0;
+            z-index: 1000;
+        }
+
+        .menu-item:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 6px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-main);
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
+        }
+
+        .shortcut {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .dropdown-item:hover .shortcut {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* --- SEÇENEKLER BARI --- */
+        .options-bar {
+            height: var(--toolbar-height);
+            background-color: var(--bg-panel-light);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 20px;
+            overflow-x: auto;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-group label {
+            color: var(--text-muted);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            width: 90px;
+            accent-color: var(--accent-color);
+        }
+
+        input[type="number"], select, input[type="text"] {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 3px 6px;
+            border-radius: 4px;
+            outline: none;
+            font-size: 11px;
+        }
+
+        input[type="number"] {
+            width: 55px;
+        }
+
+        .btn-toggle {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-toggle.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* --- ANA ARAYÜZ --- */
+        .workspace {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sol Araç Çubuğu */
+        .tool-bar {
+            width: 48px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 0;
+            gap: 4px;
+            z-index: 10;
+        }
+
+        .tool-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .tool-btn:hover {
+            background-color: var(--bg-panel-light);
+        }
+
+        .tool-btn.active {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .tool-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Orta Görünüm Alanı (Viewport) */
+        .viewport {
+            flex: 1;
+            background-color: #121316;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+        }
+
+        .canvas-stage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            background-color: #ffffff;
+            transform-origin: 0 0;
+        }
+
+        .canvas-stage canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: pixelated;
+        }
+
+        /* Sağ Paneller */
+        .side-panel {
+            width: 280px;
+            background-color: var(--bg-panel);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .panel-block {
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            background-color: var(--bg-panel-light);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-body {
+            padding: 10px;
+        }
+
+        /* Renk Paleti */
+        .color-picker-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .color-swatches-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .color-secondary {
+            position: absolute;
+            right: -6px;
+            bottom: -6px;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #fff;
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+        }
+
+        .swatch {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .swatch:hover {
+            transform: scale(1.15);
+            z-index: 2;
+        }
+
+        /* Katmanlar Listesi */
+        .layer-list {
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            background: var(--bg-dark);
+            border: 1px solid transparent;
+            border-radius: 5px;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .layer-item.active {
+            border-color: var(--accent-color);
+            background: var(--bg-panel-light);
+        }
+
+        .layer-preview {
+            width: 28px;
+            height: 28px;
+            background-color: #fff;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+            object-fit: contain;
+        }
+
+        .layer-name {
+            flex: 1;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .layer-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .layer-btn:hover {
+            color: var(--text-main);
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 5px;
+            padding-top: 8px;
+        }
+
+        .btn-icon {
+            flex: 1;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn-icon:hover {
+            background-color: var(--bg-panel-light);
+        }
+
+        /* Geçmiş Paneli */
+        .history-list {
+            max-height: 140px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .history-item {
+            padding: 4px 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .history-item:hover {
+            background-color: var(--bg-panel-light);
+            color: var(--text-main);
+        }
+
+        .history-item.active {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        /* --- DURUM BARI --- */
+        .status-bar {
+            height: var(--statusbar-height);
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            z-index: 100;
+        }
+
+        .status-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* MODALLAR */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(3px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 360px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 12px 16px;
+            background-color: var(--bg-panel-light);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-footer {
+            padding: 12px 16px;
+            background-color: var(--bg-panel-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 6px 14px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÜ BARI -->
+    <div class="menu-bar">
+        <div class="logo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+            GibtuPaint
+        </div>
+        <div class="menu-items">
+            <div class="menu-item">
+                Dosya
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="openModal('newCanvasModal')">Yeni Tuval <span class="shortcut">Ctrl+N</span></div>
+                    <div class="dropdown-item" onclick="document.getElementById('fileInput').click()">Aç... <span class="shortcut">Ctrl+O</span></div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" onclick="exportImage('png')">PNG Olarak Kaydet</div>
+                    <div class="dropdown-item" onclick="exportImage('jpeg')">JPG Olarak Kaydet</div>
+                    <div class="dropdown-item" onclick="exportProject()">Proje İndir (.json)</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                Düzenle
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="undo()">Geri Al <span class="shortcut">Ctrl+Z</span></div>
+                    <div class="dropdown-item" onclick="redo()">İleri Al <span class="shortcut">Ctrl+Y</span></div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" onclick="copySelection()">Kopyala <span class="shortcut">Ctrl+C</span></div>
+                    <div class="dropdown-item" onclick="pasteSelection()">Yapıştır <span class="shortcut">Ctrl+V</span></div>
+                    <div class="dropdown-item" onclick="clearActiveLayer()">Katmanı Temizle</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                Görüntü & Filtreler
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="openModal('brightnessModal')">Parlaklık & Kontrast</div>
+                    <div class="dropdown-item" onclick="applyFilter('invert')">Renkleri Ters Çevir</div>
+                    <div class="dropdown-item" onclick="applyFilter('grayscale')">Siyah-Beyaz</div>
+                    <div class="dropdown-item" onclick="applyFilter('sepia')">Sepya</div>
+                    <div class="dropdown-item" onclick="applyFilter('blur')">Bulanıklaştır (3px)</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" onclick="flipCanvas('horizontal')">Yatay Döndür</div>
+                    <div class="dropdown-item" onclick="flipCanvas('vertical')">Dikey Döndür</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                Görünüm
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="zoomIn()">Yakınlaş <span class="shortcut">+</span></div>
+                    <div class="dropdown-item" onclick="zoomOut()">Uzaklaş <span class="shortcut">-</span></div>
+                    <div class="dropdown-item" onclick="resetZoom()">Zoom Sıfırla <span class="shortcut">Ctrl+0</span></div>
+                    <div class="dropdown-item" onclick="fitToScreen()">Ekranı Tam Kapla</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-item" onclick="toggleFullscreen()">Tam Ekran Modu (F11)</div>
+                </div>
+            </div>
+            <div class="menu-item">
+                Yardım
+                <div class="dropdown">
+                    <div class="dropdown-item" onclick="openModal('helpModal')">Klavye Kısayolları</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARAÇ SEÇENEKLERİ BARI -->
+    <div class="options-bar" id="optionsBar">
+        <div class="option-group" id="optSize">
+            <label>Boyut:</label>
+            <input type="range" id="brushSize" min="1" max="200" value="10" oninput="syncSize(this.value)">
+            <input type="number" id="brushSizeNum" min="1" max="200" value="10" onchange="syncSize(this.value)">
+        </div>
+        <div class="option-group" id="optOpacity">
+            <label>Opaklık:</label>
+            <input type="range" id="brushOpacity" min="1" max="100" value="100" oninput="syncOpacity(this.value)">
+            <span id="opacityVal" style="font-size:11px; width:30px;">100%</span>
+        </div>
+        <div class="option-group" id="optShapes" style="display:none;">
+            <label>Şekil:</label>
+            <select id="shapeType">
+                <option value="line">Düz Çizgi</option>
+                <option value="arrow">Ok Çizgisi</option>
+                <option value="rect">Dikdörtgen</option>
+                <option value="rounded-rect">Yuvarlatılmış Dikdörtgen</option>
+                <option value="circle">Daire / Elips</option>
+                <option value="star">Yıldız</option>
+            </select>
+            <button class="btn-toggle active" id="btnShapeStroke" onclick="toggleShapeOption('stroke')">Anahat</button>
+            <button class="btn-toggle" id="btnShapeFill" onclick="toggleShapeOption('fill')">Dolgulu</button>
+        </div>
+        <div class="option-group" id="optTolerance" style="display:none;">
+            <label>Hassasiyet (Tolerans):</label>
+            <input type="range" id="fillTolerance" min="0" max="100" value="15">
+        </div>
+        <div class="option-group" id="optText" style="display:none;">
+            <label>Font:</label>
+            <select id="fontFamily">
+                <option value="Arial">Arial</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Impact">Impact</option>
+            </select>
+            <button class="btn-toggle" id="btnTextBold" onclick="this.classList.toggle('active')"><b>B</b></button>
+            <button class="btn-toggle" id="btnTextItalic" onclick="this.classList.toggle('active')"><i>I</i></button>
+        </div>
+    </div>
+
+    <!-- ANA ÇALIŞMA ALANI -->
+    <div class="workspace">
+        <!-- SOL ARAÇ ÇUBUĞU -->
+        <div class="tool-bar">
+            <button class="tool-btn active" data-tool="brush" title="Fırça (B)"><svg viewBox="0 0 24 24"><path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34a.996.996 0 0 0-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z"/></svg></button>
+            <button class="tool-btn" data-tool="pencil" title="Keskin Kalem (P)"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+            <button class="tool-btn" data-tool="eraser" title="Silgi (E)"><svg viewBox="0 0 24 24"><path d="M15.14 3c-.51 0-1.02.2-1.41.59L2.59 14.73c-.78.78-.78 2.05 0 2.83L6.17 21.14c.78.78 2.05.78 2.83 0l11.14-11.14c.79-.78.79-2.05 0-2.83l-3.58-3.58c-.39-.39-.9-.59-1.42-.59zM12 16l-4-4 7.17-7.17 4 4L12 16z"/></svg></button>
+            <button class="tool-btn" data-tool="spray" title="Sprey / Hava Fırçası (A)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><circle cx="6" cy="8" r="1.5"/><circle cx="18" cy="8" r="1.5"/><circle cx="8" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>
+            <button class="tool-btn" data-tool="bucket" title="Kova Dolgu (G)"><svg viewBox="0 0 24 24"><path d="M19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5zM16.56 2.52c-.39-.39-1.02-.39-1.41 0L10 7.67 14.33 12l5.15-5.15c.39-.39.39-1.02 0-1.41l-2.92-2.92zM3 14l5 5 6.6-6.6-5-5L3 14z"/></svg></button>
+            <button class="tool-btn" data-tool="shape" title="Şekiller (U)"><svg viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11z"/><rect x="3" y="13.5" width="8" height="8"/><circle cx="17.5" cy="17.5" r="4.5"/></svg></button>
+            <button class="tool-btn" data-tool="text" title="Metin Ekle (T)"><svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4H5z"/></svg></button>
+            <button class="tool-btn" data-tool="select" title="Seçim Alanı (M)"><svg viewBox="0 0 24 24"><path d="M3 5h2V3c-1.1 0-2 .9-2 2zm0 8h2v-2H3v2zm4 8h2v-2H7v2zM3 9h2V7H3v2zm10-6h-2v2h2V3zm6 0v2h2c0-1.1-.9-2-2-2zM5 21v-2H3c0 1.1.9 2 2 2zm-2-4h2v-2H3v2zM9 3h2V1H9v2zm11 12h2v-2h-2v2zm0 4c1.1 0 2-.9 2-2h-2v2zm0-8h2v-2h-2v2zm-4 8h2v-2h-2v2zm0-18h2V1h-2v2z"/></svg></button>
+            <button class="tool-btn" data-tool="eyedropper" title="Renk Damlalığı (I)"><svg viewBox="0 0 24 24"><path d="M20.71 5.63l-2.34-2.34a.996.996 0 0 0-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42-7.85 7.86c-.19.18-.3.44-.3.71V19c0 .55.45 1 1 1h3.09c.27 0 .52-.11.71-.3l7.85-7.86 1.42 1.42 1.41-1.41-1.92-1.92 3.12-3.12c.4-.4.4-1.03.01-1.42zM6.92 18L5 16.08l7.23-7.23 1.92 1.92L6.92 18z"/></svg></button>
+            <button class="tool-btn" data-tool="pan" title="Kaydırma / El Aracı (H)"><svg viewBox="0 0 24 24"><path d="M23 5.5V12c0 5.25-4.25 9.5-9.5 9.5h-2.5C5.8 21.5 1.5 17.2 1.5 12V9c0-.55.45-1 1-1s1 .45 1 1v3c0 4.14 3.36 7.5 7.5 7.5h2.5c4.14 0 7.5-3.36 7.5-7.5V5.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5V11h-2V3.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5V11h-2V2.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5V11h-2V5.5C8.5 4.67 7.83 4 7 4s-1.5.67-1.5 1.5V13h-2V5.5C3.5 3.57 5.07 2 7 2c.9 0 1.72.34 2.35.9C9.98 1.76 10.92 1 12 1c1.08 0 2.02.76 2.35 1.9C14.98 2.34 15.8 2 16.7 2c1.93 0 3.5 1.57 3.5 3.5z"/></svg></button>
+        </div>
+
+        <!-- VİEWPORT & TUVAL SAKLAMA ALANI -->
+        <div class="viewport" id="viewport">
+            <div class="canvas-stage" id="canvasStage">
+                <!-- Katmanlar Dinamik Oluşturulur -->
+            </div>
+        </div>
+
+        <!-- SAĞ PANELLER -->
+        <div class="side-panel">
+            <!-- Renk Seçici -->
+            <div class="panel-block">
+                <div class="panel-header">Renkleme</div>
+                <div class="panel-body">
+                    <div class="color-picker-box">
+                        <div class="color-swatches-main">
+                            <div style="position:relative; width:48px; height:48px;">
+                                <div class="color-circle" id="primaryColorDisplay" style="background-color:#000000;" onclick="document.getElementById('primaryColorInput').click()"></div>
+                                <div class="color-circle color-secondary" id="secondaryColorDisplay" style="background-color:#ffffff;" onclick="document.getElementById('secondaryColorInput').click()"></div>
+                            </div>
+                            <input type="color" id="primaryColorInput" value="#000000" style="opacity:0; width:0; height:0;" onchange="updateColors()">
+                            <input type="color" id="secondaryColorInput" value="#ffffff" style="opacity:0; width:0; height:0;" onchange="updateColors()">
+                            <button class="btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="swapColors()">Değiştir ⇆</button>
+                        </div>
+                        <div class="palette-grid" id="paletteGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Katman Yönetimi -->
+            <div class="panel-block" style="flex:1;">
+                <div class="panel-header">
+                    Katmanlar
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn-icon" style="padding:2px 6px;" onclick="addLayer()" title="Yeni Katman">+</button>
+                    </div>
+                </div>
+                <div class="panel-body" style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span style="color:var(--text-muted); font-size:10px;">Karışım:</span>
+                        <select id="layerBlendMode" onchange="changeLayerBlendMode(this.value)" style="flex:1;">
+                            <option value="source-over">Normal</option>
+                            <option value="multiply">Çarpan (Multiply)</option>
+                            <option value="screen">Ekran (Screen)</option>
+                            <option value="overlay">Kaplama (Overlay)</option>
+                            <option value="darken">Karart</option>
+                            <option value="lighten">Aydınlat</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span style="color:var(--text-muted); font-size:10px;">Opaklık:</span>
+                        <input type="range" id="layerOpacity" min="0" max="100" value="100" oninput="changeLayerOpacity(this.value)" style="flex:1;">
+                    </div>
+                    <div class="layer-list" id="layerList"></div>
+                    <div class="layer-controls">
+                        <button class="btn-icon" onclick="moveLayer('up')" title="Yukarı Taşı">▲</button>
+                        <button class="btn-icon" onclick="moveLayer('down')" title="Aşağı Taşı">▼</button>
+                        <button class="btn-icon" onclick="duplicateLayer()" title="Katmanı Çoğalt">❏</button>
+                        <button class="btn-icon" onclick="deleteLayer()" title="Katmanı Sil">🗑</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Geçmiş Paneli -->
+            <div class="panel-block">
+                <div class="panel-header">Geçmiş (Undo Log)</div>
+                <div class="panel-body">
+                    <div class="history-list" id="historyList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DURUM BARI -->
+    <div class="status-bar">
+        <div class="status-group">
+            <span id="statusCoords">X: 0px, Y: 0px</span>
+            <span id="statusDocSize">Tuval: 1920 x 1080px</span>
+        </div>
+        <div class="status-group">
+            <span id="statusZoom">Zoom: 100%</span>
+            <button class="btn-secondary" style="padding:2px 8px; font-size:10px;" onclick="fitToScreen()">Sığdır</button>
+            <button class="btn-secondary" style="padding:2px 8px; font-size:10px;" onclick="toggleFullscreen()">Tam Ekran (F11)</button>
+        </div>
+    </div>
+
+    <!-- GİZLİ DOSYA ALICISI -->
+    <input type="file" id="fileInput" accept="image/*,.json" onchange="handleFileOpen(event)">
+
+    <!-- MODAL: YENİ TUVAL -->
+    <div class="modal-overlay" id="newCanvasModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span>Yeni Tuval Oluştur</span>
+                <span style="cursor:pointer" onclick="closeModal('newCanvasModal')">✕</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <label>Şablonlar:</label>
+                    <select onchange="applyPreset(this.value)">
+                        <option value="custom">Özel Boyut</option>
+                        <option value="1920x1080" selected>Full HD (1920x1080)</option>
+                        <option value="1280x720">HD (1280x720)</option>
+                        <option value="1080x1080">Instagram Kare (1080x1080)</option>
+                        <option value="screen">Ekran Boyutu</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Genişlik (px):</label>
+                    <input type="number" id="newWidth" value="1920">
+                </div>
+                <div class="form-row">
+                    <label>Yükseklik (px):</label>
+                    <input type="number" id="newHeight" value="1080">
+                </div>
+                <div class="form-row">
+                    <label>Arkaplan:</label>
+                    <select id="newBg">
+                        <option value="#ffffff">Beyaz</option>
+                        <option value="#000000">Siyah</option>
+                        <option value="transparent">Saydam (Şeffaf)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newCanvasModal')">İptal</button>
+                <button class="btn btn-primary" onclick="createNewCanvas()">Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PARLAKLIK / KONTRAST -->
+    <div class="modal-overlay" id="brightnessModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span>Parlaklık & Kontrast</span>
+                <span style="cursor:pointer" onclick="closeModal('brightnessModal')">✕</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <label>Parlaklık:</label>
+                    <input type="range" id="valBrightness" min="-100" max="100" value="0">
+                </div>
+                <div class="form-row">
+                    <label>Kontrast:</label>
+                    <input type="range" id="valContrast" min="-100" max="100" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('brightnessModal')">İptal</button>
+                <button class="btn btn-primary" onclick="applyBrightnessContrast()">Uygula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: YARDIM / KISAYOLLAR -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal" style="width:420px;">
+            <div class="modal-header">
+                <span>Klavye Kısayolları</span>
+                <span style="cursor:pointer" onclick="closeModal('helpModal')">✕</span>
+            </div>
+            <div class="modal-body" style="font-size:11px; gap:8px;">
+                <div class="form-row"><span>B / P / E / A</span><b>Fırça / Kalem / Silgi / Sprey</b></div>
+                <div class="form-row"><span>G / U / T / M</span><b>Kova / Şekil / Metin / Seçim</b></div>
+                <div class="form-row"><span>I / H</span><b>Damlalık / Kaydırma (Pan)</b></div>
+                <div class="form-row"><span>Space (Boşluk)</span><b>Görüntüyü Kaydır (Basılı Tut)</b></div>
+                <div class="form-row"><span>Ctrl + Z / Ctrl + Y</span><b>Geri Al / İleri Al</b></div>
+                <div class="form-row"><span>Ctrl + C / Ctrl + V</span><b>Seçimi Kopyala / Yapıştır</b></div>
+                <div class="form-row"><span>[ / ]</span><b>Fırça Boyutunu Küçült / Büyüt</b></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('helpModal')">Tamam</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- UYGULAMA DURUMU (APP STATE) --- */
+        const state = {
+            width: 1920,
+            height: 1080,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            isPanning: false,
+            startPanX: 0,
+            startPanY: 0,
+            activeTool: 'brush',
+            primaryColor: '#000000',
+            secondaryColor: '#ffffff',
+            canvasBgColor: '#ffffff',
+            brushSize: 10,
+            brushOpacity: 1,
+            shapeType: 'line',
+            shapeFill: false,
+            shapeStroke: true,
+            fillTolerance: 15,
+            layers: [],
+            activeLayerIndex: -1,
+            history: [],
+            historyIndex: -1,
+            isDrawing: false,
+            startX: 0,
+            startY: 0,
+            selection: null,
+            clipboard: null
+        };
+
+        const PRESET_COLORS = [
+            '#000000', '#7f7f7f', '#880015', '#ed1c24', '#ff7f27', '#fff200', '#22b14c', '#00a2e8',
+            '#ffffff', '#c3c3c3', '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7', '#ff1493', '#8b4513'
+        ];
+
+        /* DOM ELEMANLARI */
+        const viewport = document.getElementById('viewport');
+        const canvasStage = document.getElementById('canvasStage');
+        const layerListEl = document.getElementById('layerList');
+        const historyListEl = document.getElementById('historyList');
+
+        let tempCanvas, tempCtx;
+
+        /* --- İLK YÜKLEME VE KURULUM --- */
+        window.addEventListener('DOMContentLoaded', () => {
+            initPalette();
+            setupEventListeners();
+            createNewCanvas(1920, 1080, '#ffffff');
+            fitToScreen();
+        });
+
+        window.addEventListener('resize', () => {
+            fitToScreen();
+        });
+
+        function initPalette() {
+            const grid = document.getElementById('paletteGrid');
+            grid.innerHTML = '';
+            PRESET_COLORS.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'swatch';
+                swatch.style.backgroundColor = color;
+                swatch.onclick = () => {
+                    state.primaryColor = color;
+                    document.getElementById('primaryColorDisplay').style.backgroundColor = color;
+                    document.getElementById('primaryColorInput').value = color;
+                };
+                grid.appendChild(swatch);
+            });
+        }
+
+        /* --- KATMAN YÖNETİM SİSTEMİ --- */
+        function createLayer(name = 'Katman ' + (state.layers.length + 1)) {
+            const canvas = document.createElement('canvas');
+            canvas.width = state.width;
+            canvas.height = state.height;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            return {
+                id: Date.now() + Math.random(),
+                name: name,
+                canvas: canvas,
+                ctx: ctx,
+                visible: true,
+                locked: false,
+                opacity: 1,
+                blendMode: 'source-over'
+            };
+        }
+
+        function addLayer() {
+            const layer = createLayer();
+            state.layers.push(layer);
+            state.activeLayerIndex = state.layers.length - 1;
+            renderCanvasStack();
+            updateLayerUI();
+            saveState('Yeni Katman Eklendi');
+        }
+
+        function renderCanvasStack() {
+            canvasStage.innerHTML = '';
+            canvasStage.style.width = state.width + 'px';
+            canvasStage.style.height = state.height + 'px';
+            canvasStage.style.backgroundColor = state.canvasBgColor || '#ffffff';
+
+            state.layers.forEach((layer) => {
+                if (layer.visible) {
+                    layer.canvas.style.opacity = layer.opacity;
+                    layer.canvas.style.mixBlendMode = layer.blendMode;
+                    canvasStage.appendChild(layer.canvas);
+                }
+            });
+
+            if (!tempCanvas) {
+                tempCanvas = document.createElement('canvas');
+                tempCtx = tempCanvas.getContext('2d');
+            }
+            tempCanvas.width = state.width;
+            tempCanvas.height = state.height;
+            tempCanvas.style.pointerEvents = 'none';
+            canvasStage.appendChild(tempCanvas);
+        }
+
+        function updateLayerUI() {
+            layerListEl.innerHTML = '';
+            for (let i = state.layers.length - 1; i >= 0; i--) {
+                const layer = state.layers[i];
+                const item = document.createElement('div');
+                item.className = `layer-item ${i === state.activeLayerIndex ? 'active' : ''}`;
+                item.onclick = () => { state.activeLayerIndex = i; updateLayerUI(); };
+
+                const preview = document.createElement('canvas');
+                preview.className = 'layer-preview';
+                preview.width = 40;
+                preview.height = 40;
+                preview.getContext('2d').drawImage(layer.canvas, 0, 0, 40, 40);
+
+                item.innerHTML = `
+                    <button class="layer-btn" onclick="event.stopPropagation(); toggleLayerVisibility(${i})">${layer.visible ? '👁' : '🙈'}</button>
+                    <button class="layer-btn" onclick="event.stopPropagation(); toggleLayerLock(${i})">${layer.locked ? '🔒' : '🔓'}</button>
+                `;
+                item.appendChild(preview);
+                item.innerHTML += `<span class="layer-name">${layer.name}</span>`;
+
+                layerListEl.appendChild(item);
+            }
+
+            if (getActiveLayer()) {
+                document.getElementById('layerOpacity').value = getActiveLayer().opacity * 100;
+                document.getElementById('layerBlendMode').value = getActiveLayer().blendMode;
+            }
+        }
+
+        function getActiveLayer() {
+            return state.layers[state.activeLayerIndex] || null;
+        }
+
+        function toggleLayerVisibility(index) {
+            state.layers[index].visible = !state.layers[index].visible;
+            renderCanvasStack();
+            updateLayerUI();
+        }
+
+        function toggleLayerLock(index) {
+            state.layers[index].locked = !state.layers[index].locked;
+            updateLayerUI();
+        }
+
+        function changeLayerOpacity(val) {
+            const layer = getActiveLayer();
+            if (layer) {
+                layer.opacity = val / 100;
+                renderCanvasStack();
+            }
+        }
+
+        function changeLayerBlendMode(val) {
+            const layer = getActiveLayer();
+            if (layer) {
+                layer.blendMode = val;
+                renderCanvasStack();
+            }
+        }
+
+        function deleteLayer() {
+            if (state.layers.length <= 1) return;
+            state.layers.splice(state.activeLayerIndex, 1);
+            state.activeLayerIndex = Math.max(0, state.activeLayerIndex - 1);
+            renderCanvasStack();
+            updateLayerUI();
+            saveState('Katman Silindi');
+        }
+
+        function duplicateLayer() {
+            const src = getActiveLayer();
+            if (!src) return;
+            const layer = createLayer(src.name + ' Kopya');
+            layer.ctx.drawImage(src.canvas, 0, 0);
+            state.layers.splice(state.activeLayerIndex + 1, 0, layer);
+            state.activeLayerIndex++;
+            renderCanvasStack();
+            updateLayerUI();
+            saveState('Katman Çoğaltıldı');
+        }
+
+        function moveLayer(dir) {
+            const idx = state.activeLayerIndex;
+            if (dir === 'up' && idx < state.layers.length - 1) {
+                const temp = state.layers[idx];
+                state.layers[idx] = state.layers[idx + 1];
+                state.layers[idx + 1] = temp;
+                state.activeLayerIndex++;
+            } else if (dir === 'down' && idx > 0) {
+                const temp = state.layers[idx];
+                state.layers[idx] = state.layers[idx - 1];
+                state.layers[idx - 1] = temp;
+                state.activeLayerIndex--;
+            }
+            renderCanvasStack();
+            updateLayerUI();
+        }
+
+        /* --- %100 HASSAS KOORDİNAT HESAPLAMA & SIĞDIRMA --- */
+        function getCanvasCoords(e) {
+            const rect = canvasStage.getBoundingClientRect();
+            if (!rect.width || !rect.height) return { x: 0, y: 0 };
+
+            const x = Math.floor((e.clientX - rect.left) * (state.width / rect.width));
+            const y = Math.floor((e.clientY - rect.top) * (state.height / rect.height));
+
+            return { x, y };
+        }
+
+        function updateTransform() {
+            canvasStage.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+            document.getElementById('statusZoom').innerText = `Zoom: ${Math.round(state.zoom * 100)}%`;
+        }
+
+        function zoomIn() {
+            state.zoom = Math.min(state.zoom * 1.2, 10);
+            updateTransform();
+        }
+
+        function zoomOut() {
+            state.zoom = Math.max(state.zoom / 1.2, 0.05);
+            updateTransform();
+        }
+
+        function resetZoom() {
+            state.zoom = 1;
+            updateTransform();
+        }
+
+        function fitToScreen() {
+            const vw = viewport.clientWidth;
+            const vh = viewport.clientHeight;
+            if (vw <= 0 || vh <= 0) return;
+
+            // Boşluk bırakmadan alanı tam kaplayacak ölçekleme
+            const scale = Math.max(vw / state.width, vh / state.height);
+            state.zoom = scale;
+            state.panX = (vw - state.width * scale) / 2;
+            state.panY = (vh - state.height * scale) / 2;
+            updateTransform();
+        }
+
+        /* --- ÇİZİM İŞLEMLERİ VE OLAYLAR --- */
+        function setupEventListeners() {
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.activeTool = btn.dataset.tool;
+                    updateOptionsBar();
+                });
+            });
+
+            viewport.addEventListener('mousedown', onMouseDown);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+            viewport.addEventListener('wheel', onWheel, { passive: false });
+            window.addEventListener('keydown', onKeyDown);
+        }
+
+        function updateOptionsBar() {
+            document.getElementById('optShapes').style.display = state.activeTool === 'shape' ? 'flex' : 'none';
+            document.getElementById('optTolerance').style.display = state.activeTool === 'bucket' ? 'flex' : 'none';
+            document.getElementById('optText').style.display = state.activeTool === 'text' ? 'flex' : 'none';
+        }
+
+        function onMouseDown(e) {
+            if (e.button === 1 || state.activeTool === 'pan' || e.spaceKey) {
+                state.isPanning = true;
+                state.startPanX = e.clientX - state.panX;
+                state.startPanY = e.clientY - state.panY;
+                viewport.style.cursor = 'grabbing';
+                return;
+            }
+
+            const layer = getActiveLayer();
+            if (!layer || !layer.visible || layer.locked) return;
+
+            const coords = getCanvasCoords(e);
+            state.isDrawing = true;
+            state.startX = coords.x;
+            state.startY = coords.y;
+
+            const ctx = layer.ctx;
+            ctx.fillStyle = state.primaryColor;
+            ctx.strokeStyle = state.primaryColor;
+            ctx.lineWidth = state.brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.globalAlpha = state.brushOpacity;
+
+            if (state.activeTool === 'brush') {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.beginPath();
+                ctx.moveTo(coords.x, coords.y);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+            } else if (state.activeTool === 'pencil') {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillRect(coords.x, coords.y, 1, 1);
+            } else if (state.activeTool === 'eraser') {
+                // Silgi: Arkaplan katmanında beyaz/ikincil renk ile siler, üst katmanlarda transparan temizler
+                if (state.activeLayerIndex === 0) {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = state.secondaryColor || '#ffffff';
+                    ctx.fillStyle = state.secondaryColor || '#ffffff';
+                } else {
+                    ctx.globalCompositeOperation = 'destination-out';
+                }
+                ctx.beginPath();
+                ctx.moveTo(coords.x, coords.y);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+            } else if (state.activeTool === 'bucket') {
+                floodFill(layer.ctx, coords.x, coords.y, state.primaryColor, state.fillTolerance);
+                saveState('Kova Dolgu');
+            } else if (state.activeTool === 'eyedropper') {
+                pickColor(coords.x, coords.y);
+            } else if (state.activeTool === 'text') {
+                drawText(coords.x, coords.y);
+            }
+        }
+
+        function onMouseMove(e) {
+            const coords = getCanvasCoords(e);
+            document.getElementById('statusCoords').innerText = `X: ${coords.x}px, Y: ${coords.y}px`;
+
+            if (state.isPanning) {
+                state.panX = e.clientX - state.startPanX;
+                state.panY = e.clientY - state.startPanY;
+                updateTransform();
+                return;
+            }
+
+            if (!state.isDrawing) return;
+            const layer = getActiveLayer();
+            if (!layer) return;
+
+            const ctx = layer.ctx;
+
+            if (state.activeTool === 'brush' || state.activeTool === 'eraser') {
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+            } else if (state.activeTool === 'pencil') {
+                ctx.fillRect(coords.x, coords.y, 1, 1);
+            } else if (state.activeTool === 'spray') {
+                ctx.globalCompositeOperation = 'source-over';
+                for (let i = 0; i < 20; i++) {
+                    const rx = coords.x + (Math.random() - 0.5) * state.brushSize * 2;
+                    const ry = coords.y + (Math.random() - 0.5) * state.brushSize * 2;
+                    ctx.fillRect(rx, ry, 1, 1);
+                }
+            } else if (state.activeTool === 'shape' || state.activeTool === 'select') {
+                tempCtx.clearRect(0, 0, state.width, state.height);
+                if (state.activeTool === 'shape') {
+                    drawShape(tempCtx, state.startX, state.startY, coords.x, coords.y);
+                } else if (state.activeTool === 'select') {
+                    tempCtx.strokeStyle = '#3b82f6';
+                    tempCtx.setLineDash([4, 4]);
+                    tempCtx.strokeRect(state.startX, state.startY, coords.x - state.startX, coords.y - state.startY);
+                    tempCtx.setLineDash([]);
+                }
+            }
+        }
+
+        function onMouseUp(e) {
+            if (state.isPanning) {
+                state.isPanning = false;
+                viewport.style.cursor = 'default';
+            }
+
+            if (!state.isDrawing) return;
+            state.isDrawing = false;
+
+            const layer = getActiveLayer();
+            if (!layer) return;
+
+            const coords = getCanvasCoords(e);
+
+            if (state.activeTool === 'shape') {
+                drawShape(layer.ctx, state.startX, state.startY, coords.x, coords.y);
+                tempCtx.clearRect(0, 0, state.width, state.height);
+            } else if (state.activeTool === 'select') {
+                state.selection = {
+                    x: Math.min(state.startX, coords.x),
+                    y: Math.min(state.startY, coords.y),
+                    w: Math.abs(coords.x - state.startX),
+                    h: Math.abs(coords.y - state.startY)
+                };
+            }
+
+            layer.ctx.globalCompositeOperation = 'source-over';
+            saveState(state.activeTool.toUpperCase() + ' Çizimi');
+            updateLayerUI();
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+            const zoomFactor = 1.1;
+            if (e.deltaY < 0) {
+                state.zoom = Math.min(state.zoom * zoomFactor, 10);
+            } else {
+                state.zoom = Math.max(state.zoom / zoomFactor, 0.05);
+            }
+            updateTransform();
+        }
+
+        /* --- ŞEKİL ÇİZİMİ --- */
+        function drawShape(ctx, x1, y1, x2, y2) {
+            ctx.beginPath();
+            ctx.fillStyle = state.primaryColor;
+            ctx.strokeStyle = state.primaryColor;
+            ctx.lineWidth = state.brushSize;
+
+            const type = document.getElementById('shapeType').value;
+            const w = x2 - x1;
+            const h = y2 - y1;
+
+            if (type === 'line') {
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            } else if (type === 'rect') {
+                ctx.rect(x1, y1, w, h);
+            } else if (type === 'rounded-rect') {
+                ctx.roundRect(x1, y1, w, h, 10);
+            } else if (type === 'circle') {
+                ctx.ellipse(x1 + w/2, y1 + h/2, Math.abs(w/2), Math.abs(h/2), 0, 0, 2 * Math.PI);
+            } else if (type === 'star') {
+                drawStar(ctx, x1 + w/2, y1 + h/2, 5, Math.abs(w/2), Math.abs(w/4));
+            } else if (type === 'arrow') {
+                const headlen = 15;
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2 - headlen * Math.cos(angle - Math.PI / 6), y2 - headlen * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - headlen * Math.cos(angle + Math.PI / 6), y2 - headlen * Math.sin(angle + Math.PI / 6));
+            }
+
+            if (state.shapeFill) ctx.fill();
+            if (state.shapeStroke) ctx.stroke();
+        }
+
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx, y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
+        /* --- KOVA DOLGU (FLOOD FILL) --- */
+        function floodFill(ctx, startX, startY, fillColorHex, tolerance) {
+            const imgData = ctx.getImageData(0, 0, state.width, state.height);
+            const data = imgData.data;
+
+            const targetR = data[(startY * state.width + startX) * 4];
+            const targetG = data[(startY * state.width + startX) * 4 + 1];
+            const targetB = data[(startY * state.width + startX) * 4 + 2];
+            const targetA = data[(startY * state.width + startX) * 4 + 3];
+
+            const fillRGB = hexToRgb(fillColorHex);
+            if (targetR === fillRGB.r && targetG === fillRGB.g && targetB === fillRGB.b && targetA === 255) return;
+
+            const pixels = [startX, startY];
+            const visited = new Uint8Array(state.width * state.height);
+
+            while (pixels.length > 0) {
+                const y = pixels.pop();
+                const x = pixels.pop();
+
+                const idx = (y * state.width + x);
+                if (visited[idx]) continue;
+                visited[idx] = 1;
+
+                const pIdx = idx * 4;
+                const r = data[pIdx], g = data[pIdx + 1], b = data[pIdx + 2], a = data[pIdx + 3];
+
+                if (Math.abs(r - targetR) <= tolerance && Math.abs(g - targetG) <= tolerance &&
+                    Math.abs(b - targetB) <= tolerance && Math.abs(a - targetA) <= tolerance) {
+                    
+                    data[pIdx] = fillRGB.r;
+                    data[pIdx + 1] = fillRGB.g;
+                    data[pIdx + 2] = fillRGB.b;
+                    data[pIdx + 3] = 255;
+
+                    if (x > 0) pixels.push(x - 1, y);
+                    if (x < state.width - 1) pixels.push(x + 1, y);
+                    if (y > 0) pixels.push(x, y - 1);
+                    if (y < state.height - 1) pixels.push(x, y + 1);
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        /* --- METİN EKLEME --- */
+        function drawText(x, y) {
+            const text = prompt('Eklemek istediğiniz metni yazın:', 'GibtuPaint');
+            if (!text) return;
+            const layer = getActiveLayer();
+            if (!layer) return;
+
+            const font = document.getElementById('fontFamily').value;
+            const isBold = document.getElementById('btnTextBold').classList.contains('active') ? 'bold ' : '';
+            const isItalic = document.getElementById('btnTextItalic').classList.contains('active') ? 'italic ' : '';
+
+            layer.ctx.font = `${isBold}${isItalic}${state.brushSize * 2}px ${font}`;
+            layer.ctx.fillStyle = state.primaryColor;
+            layer.ctx.fillText(text, x, y);
+            saveState('Metin Eklendi');
+            updateLayerUI();
+        }
+
+        /* --- DAMLALIK (EYEDROPPER) --- */
+        function pickColor(x, y) {
+            const composite = document.createElement('canvas');
+            composite.width = state.width;
+            composite.height = state.height;
+            const cCtx = composite.getContext('2d');
+
+            state.layers.forEach(l => {
+                if (l.visible) cCtx.drawImage(l.canvas, 0, 0);
+            });
+
+            const pixel = cCtx.getImageData(x, y, 1, 1).data;
+            const hex = '#' + ((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1);
+            state.primaryColor = hex;
+            document.getElementById('primaryColorDisplay').style.backgroundColor = hex;
+            document.getElementById('primaryColorInput').value = hex;
+        }
+
+        /* --- SEÇİM & KOPYALA / YAPIŞTIR --- */
+        function copySelection() {
+            const layer = getActiveLayer();
+            if (!layer || !state.selection) return;
+            const { x, y, w, h } = state.selection;
+            state.clipboard = layer.ctx.getImageData(x, y, w, h);
+        }
+
+        function pasteSelection() {
+            if (!state.clipboard) return;
+            const layer = getActiveLayer();
+            if (!layer) return;
+            layer.ctx.putImageData(state.clipboard, 0, 0);
+            saveState('Yapıştırıldı');
+            updateLayerUI();
+        }
+
+        /* --- FİLTRELER VE GÖRÜNTÜ İŞLEME --- */
+        function applyFilter(type) {
+            const layer = getActiveLayer();
+            if (!layer) return;
+            const ctx = layer.ctx;
+
+            if (type === 'invert') {
+                const imgData = ctx.getImageData(0, 0, state.width, state.height);
+                for (let i = 0; i < imgData.data.length; i += 4) {
+                    imgData.data[i] = 255 - imgData.data[i];
+                    imgData.data[i+1] = 255 - imgData.data[i+1];
+                    imgData.data[i+2] = 255 - imgData.data[i+2];
+                }
+                ctx.putImageData(imgData, 0, 0);
+            } else if (type === 'grayscale') {
+                const imgData = ctx.getImageData(0, 0, state.width, state.height);
+                for (let i = 0; i < imgData.data.length; i += 4) {
+                    const avg = (imgData.data[i] + imgData.data[i+1] + imgData.data[i+2]) / 3;
+                    imgData.data[i] = avg;
+                    imgData.data[i+1] = avg;
+                    imgData.data[i+2] = avg;
+                }
+                ctx.putImageData(imgData, 0, 0);
+            } else if (type === 'sepia') {
+                const imgData = ctx.getImageData(0, 0, state.width, state.height);
+                for (let i = 0; i < imgData.data.length; i += 4) {
+                    const r = imgData.data[i], g = imgData.data[i+1], b = imgData.data[i+2];
+                    imgData.data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                    imgData.data[i+1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                    imgData.data[i+2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                }
+                ctx.putImageData(imgData, 0, 0);
+            } else if (type === 'blur') {
+                ctx.filter = 'blur(3px)';
+                const temp = document.createElement('canvas');
+                temp.width = state.width; temp.height = state.height;
+                temp.getContext('2d').drawImage(layer.canvas, 0, 0);
+                ctx.clearRect(0, 0, state.width, state.height);
+                ctx.drawImage(temp, 0, 0);
+                ctx.filter = 'none';
+            }
+            saveState('Filtre: ' + type);
+            updateLayerUI();
+        }
+
+        function applyBrightnessContrast() {
+            const b = parseInt(document.getElementById('valBrightness').value);
+            const c = parseInt(document.getElementById('valContrast').value);
+            const layer = getActiveLayer();
+            if (!layer) return;
+
+            const ctx = layer.ctx;
+            ctx.filter = `brightness(${100 + b}%) contrast(${100 + c}%)`;
+            const temp = document.createElement('canvas');
+            temp.width = state.width; temp.height = state.height;
+            temp.getContext('2d').drawImage(layer.canvas, 0, 0);
+            ctx.clearRect(0, 0, state.width, state.height);
+            ctx.drawImage(temp, 0, 0);
+            ctx.filter = 'none';
+
+            closeModal('brightnessModal');
+            saveState('Parlaklık/Kontrast');
+            updateLayerUI();
+        }
+
+        function flipCanvas(direction) {
+            const layer = getActiveLayer();
+            if (!layer) return;
+            const temp = document.createElement('canvas');
+            temp.width = state.width; temp.height = state.height;
+            const tCtx = temp.getContext('2d');
+
+            tCtx.translate(direction === 'horizontal' ? state.width : 0, direction === 'vertical' ? state.height : 0);
+            tCtx.scale(direction === 'horizontal' ? -1 : 1, direction === 'vertical' ? -1 : 1);
+            tCtx.drawImage(layer.canvas, 0, 0);
+
+            layer.ctx.clearRect(0, 0, state.width, state.height);
+            layer.ctx.drawImage(temp, 0, 0);
+            saveState('Döndürme');
+            updateLayerUI();
+        }
+
+        /* --- GEÇMİŞ (UNDO / REDO) --- */
+        function saveState(actionName) {
+            state.history = state.history.slice(0, state.historyIndex + 1);
+
+            const snapshot = state.layers.map(l => {
+                const c = document.createElement('canvas');
+                c.width = state.width; c.height = state.height;
+                c.getContext('2d').drawImage(l.canvas, 0, 0);
+                return {
+                    name: l.name,
+                    visible: l.visible,
+                    locked: l.locked,
+                    opacity: l.opacity,
+                    blendMode: l.blendMode,
+                    canvas: c
+                };
+            });
+
+            state.history.push({ name: actionName, layers: snapshot });
+            if (state.history.length > 25) state.history.shift();
+            state.historyIndex = state.history.length - 1;
+
+            updateHistoryUI();
+        }
+
+        function undo() {
+            if (state.historyIndex > 0) {
+                state.historyIndex--;
+                restoreHistoryState();
+            }
+        }
+
+        function redo() {
+            if (state.historyIndex < state.history.length - 1) {
+                state.historyIndex++;
+                restoreHistoryState();
+            }
+        }
+
+        function restoreHistoryState() {
+            const snapshot = state.history[state.historyIndex];
+            state.layers = snapshot.layers.map(s => {
+                const c = document.createElement('canvas');
+                c.width = state.width; c.height = state.height;
+                const ctx = c.getContext('2d', { willReadFrequently: true });
+                ctx.drawImage(s.canvas, 0, 0);
+                return {
+                    id: Date.now() + Math.random(),
+                    name: s.name,
+                    visible: s.visible,
+                    locked: s.locked,
+                    opacity: s.opacity,
+                    blendMode: s.blendMode,
+                    canvas: c,
+                    ctx: ctx
+                };
+            });
+            state.activeLayerIndex = Math.min(state.activeLayerIndex, state.layers.length - 1);
+            renderCanvasStack();
+            updateLayerUI();
+            updateHistoryUI();
+        }
+
+        function updateHistoryUI() {
+            historyListEl.innerHTML = '';
+            state.history.forEach((step, idx) => {
+                const item = document.createElement('div');
+                item.className = `history-item ${idx === state.historyIndex ? 'active' : ''}`;
+                item.innerText = `${idx + 1}. ${step.name}`;
+                item.onclick = () => { state.historyIndex = idx; restoreHistoryState(); };
+                historyListEl.appendChild(item);
+            });
+        }
+
+        /* --- DOSYA KAYDETME / İÇE AKTARMA --- */
+        function createNewCanvas(w, h, bg) {
+            state.width = w || parseInt(document.getElementById('newWidth').value);
+            state.height = h || parseInt(document.getElementById('newHeight').value);
+            const bgColor = bg || document.getElementById('newBg').value;
+            state.canvasBgColor = bgColor === 'transparent' ? '#ffffff' : bgColor;
+
+            state.layers = [];
+            state.history = [];
+            state.historyIndex = -1;
+
+            const baseLayer = createLayer('Arkaplan');
+            if (bgColor !== 'transparent') {
+                baseLayer.ctx.fillStyle = bgColor;
+                baseLayer.ctx.fillRect(0, 0, state.width, state.height);
+            }
+            state.layers.push(baseLayer);
+            state.activeLayerIndex = 0;
+
+            document.getElementById('statusDocSize').innerText = `Tuval: ${state.width} x ${state.height}px`;
+
+            renderCanvasStack();
+            updateLayerUI();
+            saveState('Yeni Tuval');
+            closeModal('newCanvasModal');
+            fitToScreen();
+        }
+
+        function exportImage(format) {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = state.width;
+            exportCanvas.height = state.height;
+            const eCtx = exportCanvas.getContext('2d');
+
+            if (format === 'jpeg') {
+                eCtx.fillStyle = '#ffffff';
+                eCtx.fillRect(0, 0, state.width, state.height);
+            }
+
+            state.layers.forEach(l => {
+                if (l.visible) {
+                    eCtx.globalAlpha = l.opacity;
+                    eCtx.globalCompositeOperation = l.blendMode;
+                    eCtx.drawImage(l.canvas, 0, 0);
+                }
+            });
+
+            const link = document.createElement('a');
+            link.download = `Gibtupaint-${Date.now()}.${format}`;
+            link.href = exportCanvas.toDataURL(`image/${format}`);
+            link.click();
+        }
+
+        function exportProject() {
+            const projectData = {
+                width: state.width,
+                height: state.height,
+                layers: state.layers.map(l => ({
+                    name: l.name,
+                    opacity: l.opacity,
+                    blendMode: l.blendMode,
+                    visible: l.visible,
+                    locked: l.locked,
+                    data: l.canvas.toDataURL()
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(projectData)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.download = `project-${Date.now()}.json`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+
+        function handleFileOpen(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.name.endsWith('.json')) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const proj = JSON.parse(evt.target.result);
+                    state.width = proj.width;
+                    state.height = proj.height;
+                    state.layers = [];
+
+                    let loadedCount = 0;
+                    proj.layers.forEach((lData) => {
+                        const layer = createLayer(lData.name);
+                        layer.opacity = lData.opacity;
+                        layer.blendMode = lData.blendMode;
+                        layer.visible = lData.visible;
+                        layer.locked = lData.locked;
+
+                        const img = new Image();
+                        img.onload = () => {
+                            layer.ctx.drawImage(img, 0, 0);
+                            loadedCount++;
+                            if (loadedCount === proj.layers.length) {
+                                state.activeLayerIndex = 0;
+                                renderCanvasStack();
+                                updateLayerUI();
+                                saveState('Proje Yüklendi');
+                                fitToScreen();
+                            }
+                        };
+                        img.src = lData.data;
+                        state.layers.push(layer);
+                    });
+                };
+                reader.readAsText(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        createNewCanvas(img.width, img.height, 'transparent');
+                        getActiveLayer().ctx.drawImage(img, 0, 0);
+                        saveState('Resim Açıldı');
+                        updateLayerUI();
+                    };
+                    img.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        /* --- YARDIMCI VE YÖNETİM FONKSİYONLARI --- */
+        function syncSize(val) {
+            state.brushSize = parseInt(val);
+            document.getElementById('brushSize').value = val;
+            document.getElementById('brushSizeNum').value = val;
+        }
+
+        function syncOpacity(val) {
+            state.brushOpacity = val / 100;
+            document.getElementById('opacityVal').innerText = val + '%';
+        }
+
+        function updateColors() {
+            state.primaryColor = document.getElementById('primaryColorInput').value;
+            state.secondaryColor = document.getElementById('secondaryColorInput').value;
+            document.getElementById('primaryColorDisplay').style.backgroundColor = state.primaryColor;
+            document.getElementById('secondaryColorDisplay').style.backgroundColor = state.secondaryColor;
+        }
+
+        function swapColors() {
+            const temp = state.primaryColor;
+            state.primaryColor = state.secondaryColor;
+            state.secondaryColor = temp;
+            document.getElementById('primaryColorDisplay').style.backgroundColor = state.primaryColor;
+            document.getElementById('secondaryColorDisplay').style.backgroundColor = state.secondaryColor;
+        }
+
+        function toggleShapeOption(opt) {
+            if (opt === 'fill') {
+                state.shapeFill = !state.shapeFill;
+                document.getElementById('btnShapeFill').classList.toggle('active', state.shapeFill);
+            } else {
+                state.shapeStroke = !state.shapeStroke;
+                document.getElementById('btnShapeStroke').classList.toggle('active', state.shapeStroke);
+            }
+        }
+
+        function clearActiveLayer() {
+            const layer = getActiveLayer();
+            if (layer) {
+                if (state.activeLayerIndex === 0) {
+                    layer.ctx.fillStyle = state.secondaryColor || '#ffffff';
+                    layer.ctx.fillRect(0, 0, state.width, state.height);
+                } else {
+                    layer.ctx.clearRect(0, 0, state.width, state.height);
+                }
+                saveState('Katman Temizlendi');
+                updateLayerUI();
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function applyPreset(val) {
+            if (val === '1920x1080') { document.getElementById('newWidth').value = 1920; document.getElementById('newHeight').value = 1080; }
+            else if (val === '1280x720') { document.getElementById('newWidth').value = 1280; document.getElementById('newHeight').value = 720; }
+            else if (val === '1080x1080') { document.getElementById('newWidth').value = 1080; document.getElementById('newHeight').value = 1080; }
+            else if (val === 'screen') { document.getElementById('newWidth').value = window.innerWidth; document.getElementById('newHeight').value = window.innerHeight; }
+        }
+
+        function onKeyDown(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+            if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+            if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+            if (e.ctrlKey && e.key.toLowerCase() === 'c') { e.preventDefault(); copySelection(); }
+            if (e.ctrlKey && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteSelection(); }
+            if (e.ctrlKey && e.key === '0') { e.preventDefault(); resetZoom(); }
+
+            if (e.key.toLowerCase() === 'b') selectToolByShortcut('brush');
+            if (e.key.toLowerCase() === 'p') selectToolByShortcut('pencil');
+            if (e.key.toLowerCase() === 'e') selectToolByShortcut('eraser');
+            if (e.key.toLowerCase() === 'g') selectToolByShortcut('bucket');
+            if (e.key.toLowerCase() === 'u') selectToolByShortcut('shape');
+            if (e.key.toLowerCase() === 't') selectToolByShortcut('text');
+            if (e.key.toLowerCase() === 'm') selectToolByShortcut('select');
+            if (e.key.toLowerCase() === 'i') selectToolByShortcut('eyedropper');
+            if (e.key.toLowerCase() === 'h') selectToolByShortcut('pan');
+
+            if (e.key === '[') syncSize(Math.max(1, state.brushSize - 2));
+            if (e.key === ']') syncSize(Math.min(200, state.brushSize + 2));
+        }
+
+        function selectToolByShortcut(tool) {
+            state.activeTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.tool === tool);
+            });
+            updateOptionsBar();
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+    </script>
+</body>
+</html>
